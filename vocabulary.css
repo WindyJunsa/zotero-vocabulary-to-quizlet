@@ -1,0 +1,16 @@
+.hq-vocab { font: 13px system-ui, sans-serif; color: inherit; padding: 8px; }
+.hq-vocab input:not([type=checkbox]), .hq-vocab textarea { box-sizing: border-box; width: 100%; font: inherit; border: 1px solid #8887; border-radius: 5px; padding: 7px; color: inherit; background: transparent; }
+.hq-vocab textarea { resize: vertical; }
+.hq-vocab-count { font-weight: 600; }
+.hq-vocab-filter { display:flex; gap:6px; align-items:center; margin:10px 0; }
+.hq-vocab-row { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0; }
+.hq-vocab button { font: inherit; color: inherit; background: transparent; border: 1px solid #8887; border-radius: 5px; padding: 6px 8px; cursor:pointer; }
+.hq-vocab button:disabled { opacity:.55; cursor:wait; }
+.hq-vocab button.hq-vocab-primary { background:#295cca; color:white; border-color:#295cca; }
+.hq-vocab-list { max-height:55vh; overflow-y:auto; }
+.hq-vocab-card { border-top:1px solid #8885; padding:12px 0; display:flex; flex-direction:column; gap:6px; }
+.hq-vocab-card input { font-weight:600; }
+.hq-vocab button.hq-vocab-source { border:0; padding:0; text-align:left; font-size:11px; opacity:.8; overflow-wrap:anywhere; }
+.hq-vocab-status { line-height:1.4; font-size:12px; }
+.hq-vocab-hint { opacity:.75; line-height:1.5; font-size:12px; }
+.hq-vocab button[hidden] { display:none; }
