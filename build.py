@@ -11,11 +11,11 @@ for field in ('id', 'update_url', 'strict_min_version', 'strict_max_version'):
         raise ValueError(f'Missing manifest field: {field}')
 if not app['update_url'].startswith('https://'):
     raise ValueError('Zotero requires HTTPS updates')
-runtime = ['manifest.json', 'bootstrap.js', 'core.js', 'review.xhtml',
+runtime = ['i18n.js', 'locale/hy-AM/vocabulary-to-quizlet.ftl', 'manifest.json', 'bootstrap.js', 'core.js', 'review.xhtml',
            'review.js', 'review.css', 'vocabulary.js', 'vocabulary.css',
            'vocabulary.svg', 'locale/en-US/vocabulary-to-quizlet.ftl',
            'locale/zh-CN/vocabulary-to-quizlet.ftl']
-source = runtime + ['README.md', 'LICENSE', '.gitignore', 'build.py',
+source = runtime + ['README.hy.md', 'i18n.test.cjs', 'README.md', 'LICENSE', '.gitignore', 'build.py',
                     'test.cjs', 'vocabulary.test.cjs', 'updates.json',
                     '.github/workflows/check.yml']
 destination = ROOT / 'dist'

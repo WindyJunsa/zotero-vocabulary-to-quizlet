@@ -1,3 +1,4 @@
+function uiText(key,args) { return vocabularyContext?.VocabularyI18n?.t(key,args) || key; }
 var chromeHandle;
 var vocabularyContext;
 var dialogs = new Set();
@@ -10,8 +11,9 @@ async function startup({ rootURI }) {
   chromeHandle = Components.classes['@mozilla.org/addons/addon-manager-startup;1']
     .getService(Components.interfaces.amIAddonManagerStartup)
     .registerChrome(Services.io.newURI(rootURI + 'manifest.json'), [['content', 'vocabulary-to-quizlet', rootURI]]);
-  for (const win of Zotero.getMainWindows()) addMenu(win);
   vocabularyContext = { Zotero, Services, Components };
+  Services.scriptloader.loadSubScript(rootURI + 'i18n.js', vocabularyContext);
+  for (const win of Zotero.getMainWindows()) addMenu(win);
   Services.scriptloader.loadSubScript(rootURI + 'core.js', vocabularyContext);
   Services.scriptloader.loadSubScript(rootURI + 'vocabulary.js', vocabularyContext);
   vocabularyContext.Vocabulary.start();
@@ -22,10 +24,10 @@ function addMenu(win) {
   if (!popup) return;
   const item = win.document.createXULElement('menuitem');
   item.id = MENU_ID;
-  item.setAttribute('label', 'Vocabulary to Quizlet…');
+  item.setAttribute('label', uiText("Vocabulary to Quizlet…"));
   item.addEventListener('command', () => openVocabulary(win).catch(error => {
     Zotero.logError(error);
-    Services.prompt.alert(win, 'Vocabulary to Quizlet', 'Could not read annotations: ' + error.message);
+    Services.prompt.alert(win, 'Vocabulary to Quizlet', uiText("Could not read annotations: ") + error.message);
   }));
   popup.appendChild(item);
 }
@@ -54,12 +56,12 @@ async function openVocabulary(win) {
     }
   }
   if (!attachments.size) {
-    Services.prompt.alert(win, 'Vocabulary to Quizlet', 'Open a PDF, or select books/PDFs in your Zotero library first.');
+    Services.prompt.alert(win, 'Vocabulary to Quizlet', uiText("Open a PDF, or select books/PDFs in your Zotero library first."));
     return;
   }
   let drafts;
   try { drafts = JSON.parse(Zotero.Prefs.get(DRAFT_PREF, true) || '{}'); }
-  catch { throw new Error('Saved vocabulary drafts could not be read. They have been left unchanged.'); }
+  catch { throw new Error(uiText("Saved vocabulary drafts could not be read. They have been left unchanged.")); }
   const rows = [];
   for (const attachment of attachments.values()) {
     for (const annotation of attachment.getAnnotations()) {
@@ -76,6 +78,8 @@ async function openVocabulary(win) {
   }
   const payload = {
     rows,
+    translate: uiText,
+    language: vocabularyContext?.VocabularyI18n?.language() || "en",
     save: values => {
       // Merge with the latest saved values so separate review windows cannot erase one another.
       const current = JSON.parse(Zotero.Prefs.get(DRAFT_PREF, true) || '{}');

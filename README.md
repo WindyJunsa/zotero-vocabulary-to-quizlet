@@ -1,5 +1,7 @@
 # Vocabulary to Quizlet
 
+**English** | [Հայերեն](README.hy.md)
+
 **Author: Huziqian** · Zotero 10 · Armenian → English vocabulary study
 
 Select a word in Zotero's PDF reader and click **＋ Add to Vocabulary** in
@@ -25,9 +27,22 @@ is never overwritten by an in-flight translation.
 
 ## Installation
 
-Download the `.xpi` from Releases when available, or build it locally.
+Download [Vocabulary to Quizlet v0.3.0](vocabulary-to-quizlet-0.3.0.xpi), or build it locally.
 In Zotero: **Tools → Plugins → gear → Install Plugin From File**.
 The extension ID is unchanged from 0.1.x, so this updates the existing add-on.
+
+## Interface language
+
+In the Vocabulary sidebar, choose **English**, **Հայերեն**, or **Automatic**
+under **Interface language / Միջերեսի լեզու**. Automatic uses Armenian when
+Zotero's locale is Armenian and English otherwise. Your choice is saved locally.
+Sidebar controls, selection-popup buttons, messages, and the legacy export
+dialog support both languages. Close an already-open selection popup and
+select the word again to see the new language. Restart Zotero to refresh
+the Tools menu label. The native sidebar heading follows Zotero's locale.
+
+Interface language does not change translation direction: Armenian → English.
+Your existing wordbook and English meanings are preserved.
 
 ## Data and limits
 
@@ -50,7 +65,7 @@ The extension ID is unchanged from 0.1.x, so this updates the existing add-on.
 No npm dependencies.
 
 ```sh
-node --test test.cjs vocabulary.test.cjs
+node --test test.cjs vocabulary.test.cjs i18n.test.cjs
 python build.py
 ```
 
@@ -58,8 +73,9 @@ The XPI and source ZIP appear in `dist/`. An explicit build allowlist excludes
 personal vocabulary, credentials, Zotero data, and Git metadata.
 
 Tests cover export formatting, duplicates, missing meanings, persistence,
-corrupt-data protection, and translation races/failures. Live UI verification
-is recorded in release notes; mocked tests alone do not prove UI compatibility.
+corrupt-data protection, translation races/failures, and localization.
+Version 0.2.0 was checked in Zotero 10.0.6; version 0.3.0's localization is
+covered by automated tests and still needs a live check after installation.
 
 ## References
 

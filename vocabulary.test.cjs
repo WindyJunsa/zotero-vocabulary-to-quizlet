@@ -14,6 +14,7 @@ function host() {
       PDFTranslate:{api:{translate: (...args)=>translator(...args)}}, logError(){}
     }
   });
+  vm.runInContext(fs.readFileSync(__dirname+'/i18n.js','utf8'),context);
   vm.runInContext(fs.readFileSync(__dirname+'/vocabulary.js','utf8'),context);
   context.Vocabulary.start();
   return {v:context.Vocabulary,prefs,set translator(value){translator=value;}};

@@ -1,5 +1,6 @@
 /* Copyright 2026 Huziqian. Selection capture and persistent vocabulary sidebar. */
 var Vocabulary = (() => {
+  const t = VocabularyI18n.t;
   const ID = 'vocabulary-to-quizlet@personal.local';
   const PREF = 'extensions.vocabulary-to-quizlet.wordbook.v1';
   const AUTO = 'extensions.vocabulary-to-quizlet.translate-on-add';
@@ -11,7 +12,7 @@ var Vocabulary = (() => {
   let paneID, alive = false;
   function read() {
     const data = JSON.parse(Zotero.Prefs.get(PREF, true) || '{"version":1,"entries":[]}');
-    if (data.version !== 1 || !Array.isArray(data.entries)) throw new Error('Vocabulary data cannot be read. Existing data has not been changed.');
+    if (data.version !== 1 || !Array.isArray(data.entries)) throw new Error(t("Vocabulary data cannot be read. Existing data has not been changed."));
     return data;
   }
   function write(change) {
@@ -58,7 +59,7 @@ var Vocabulary = (() => {
     const entry = read().entries.find(e => e.id === id && !e.deleted);
     if (!entry || pending.has(id)) return;
     const api = Zotero.PDFTranslate?.api;
-    if (!api?.translate) throw new Error('Enable Translate for Zotero, or type an English meaning.');
+    if (!api?.translate) throw new Error(t("Enable Translate for Zotero, or type an English meaning."));
     const revision = entry.meaningRevision || 0;
     const originalTerm = entry.term;
     pending.add(id); refresh();
@@ -67,7 +68,7 @@ var Vocabulary = (() => {
       if (!alive) return;
       if (!result?.result || (result.status && !['success', 'done'].includes(result.status))) {
         // Providers may use different success states; a nonempty result is authoritative unless explicitly failed.
-        if (!result?.result || ['fail','failure','error'].includes(result.status)) throw new Error('Translation failed. Please enter the English meaning manually.');
+        if (!result?.result || ['fail','failure','error'].includes(result.status)) throw new Error(t("Translation failed. Please enter the English meaning manually."));
       }
       write(entries => {
         const current = entries.find(e => e.id === id && !e.deleted);
@@ -77,13 +78,13 @@ var Vocabulary = (() => {
         current.updated = new Date().toISOString();
       });
     } catch (error) {
-      if (alive) write(entries => { const current = entries.find(e => e.id === id); if (current) current.translationError = 'Translation unavailable — enter a meaning or retry.'; });
+      if (alive) write(entries => { const current = entries.find(e => e.id === id); if (current) current.translationError = "Translation unavailable — enter a meaning or retry."; });
       Zotero.logError(error);
     } finally { pending.delete(id); if (alive) refresh(); }
   }
   function saveSelection(term, meaning, source) {
     term = VocabularyCore.clean(term);
-    if (!term) throw new Error('Select a word or phrase first.');
+    if (!term) throw new Error(t("Select a word or phrase first."));
     return write(entries => {
       let entry = entries.find(e => !e.deleted && VocabularyCore.clean(e.term) === term);
       if (entry) {
@@ -102,28 +103,28 @@ var Vocabulary = (() => {
     const box = make(doc, 'div', undefined, 'hq-vocab-popup');
     box.style.cssText = 'border-top:1px solid #9995;margin-top:8px;padding-top:8px;display:flex;flex-direction:column;gap:6px;';
     const meaning = make(doc, 'input');
-    meaning.type = 'text'; meaning.placeholder = 'English meaning (optional)';
-    meaning.setAttribute('aria-label', 'Vocabulary English meaning');
+    meaning.type = 'text'; meaning.placeholder = t("English meaning (optional)");
+    meaning.setAttribute('aria-label', t("Vocabulary English meaning"));
     meaning.style.cssText = 'box-sizing:border-box;width:100%;padding:7px;border:1px solid #9998;border-radius:5px;background:transparent;color:inherit;';
-    const button = make(doc, 'button', '＋ Add to Vocabulary');
+    const button = make(doc, 'button', t("＋ Add to Vocabulary"));
     button.type = 'button'; button.style.cssText = 'padding:9px;border:1px solid #9998;border-radius:6px;cursor:pointer;color:inherit;background:transparent;';
     const label = make(doc, 'label'); label.style.cssText = 'font-size:11px;display:flex;gap:5px;align-items:center;';
     const auto = make(doc, 'input'); auto.type = 'checkbox'; auto.checked = Zotero.Prefs.get(AUTO, true) !== false;
     auto.addEventListener('change', () => Zotero.Prefs.set(AUTO, auto.checked, true));
-    label.append(auto, make(doc, 'span', 'Translate to English on add'));
-    label.title = 'Uses your configured Translate for Zotero service. Only the selected text is sent for translation.';
+    label.append(auto, make(doc, 'span', t("Translate to English on add")));
+    label.title = t("Uses your configured Translate for Zotero service. Only the selected text is sent for translation.");
     const status = make(doc, 'span'); status.style.fontSize = '11px'; status.setAttribute('role', 'status');
     button.addEventListener('click', async () => {
       try {
         const item = Zotero.Items.get(reader.itemID);
         const source = { itemID: reader.itemID, libraryID: item?.libraryID, key: item?.key, title: item?.getField('title') || 'PDF', page: params.annotation?.pageLabel || '', pageIndex: params.annotation?.position?.pageIndex };
         const saved = saveSelection(term, meaning.value, source);
-        button.textContent = '✓ In Vocabulary';
-        status.textContent = saved.needsMeaning ? 'Saved. Add a meaning in the Vocabulary sidebar.' : 'Saved to Vocabulary sidebar.';
+        button.textContent = t("✓ In Vocabulary");
+        status.textContent = saved.needsMeaning ? t("Saved. Add a meaning in the Vocabulary sidebar.") : t("Saved to Vocabulary sidebar.");
         showSidebar(reader);
         if (auto.checked && saved.needsMeaning) {
-          if (Zotero.PDFTranslate?.api?.translate) { status.textContent = 'Saved — translating to English…'; await translate(saved.id); status.textContent = 'Saved. Review the English meaning in Vocabulary.'; }
-          else status.textContent = 'Saved. Enable Translate for Zotero or enter a meaning in the sidebar.';
+          if (Zotero.PDFTranslate?.api?.translate) { status.textContent = t("Saved — translating to English…"); await translate(saved.id); status.textContent = t("Saved. Review the English meaning in Vocabulary."); }
+          else status.textContent = t("Saved. Enable Translate for Zotero or enter a meaning in the sidebar.");
         }
       } catch (error) { status.textContent = error.message || String(error); Zotero.logError(error); }
     });
@@ -152,36 +153,36 @@ var Vocabulary = (() => {
       const filter = view.search.value.toLocaleLowerCase();
       const visible = entries.filter(e => (!view.current.checked || e.sources.some(s => s.itemID === view.itemID)) && (!filter || (e.term + ' ' + e.meaning).toLocaleLowerCase().includes(filter)));
       const incomplete = entries.filter(e => !VocabularyCore.clean(e.meaning)).length;
-      view.count.textContent = `${entries.length} words · ${incomplete} need meanings`;
+      view.count.textContent = t('Words: {count} · Missing meanings: {missing}', {count:entries.length,missing:incomplete});
       // Preserve a user's in-progress edit while another translation finishes.
       const focused = view.doc.activeElement;
       if (view.list.contains(focused)) { view.deferred = true; return; }
       view.list.replaceChildren(); view.deferred = false;
-      if (!visible.length) view.list.append(make(view.doc, 'p', entries.length ? 'No matching words.' : 'Select text in a PDF, then click Add to Vocabulary.', 'hq-vocab-hint'));
+      if (!visible.length) view.list.append(make(view.doc, 'p', entries.length ? t("No matching words.") : t("Select text in a PDF, then click Add to Vocabulary."), 'hq-vocab-hint'));
       for (const entry of visible) {
         const card = make(view.doc, 'article', undefined, 'hq-vocab-card');
-        const term = make(view.doc, 'input'); term.value = entry.term; term.setAttribute('aria-label', 'Word or phrase');
+        const term = make(view.doc, 'input'); term.value = entry.term; term.setAttribute('aria-label', t("Word or phrase"));
         const meaning = make(view.doc, 'textarea'); meaning.value = entry.meaning; meaning.rows = 2;
-        meaning.placeholder = pending.has(entry.id) ? 'Translating…' : 'Enter English meaning';
-        meaning.setAttribute('aria-label', 'English meaning for ' + entry.term);
+        meaning.placeholder = pending.has(entry.id) ? t("Translating…") : t("Enter English meaning");
+        meaning.setAttribute('aria-label', t('English meaning for {term}',{term:entry.term}));
         term.addEventListener('change', () => action(view, () => edit(entry.id, 'term', term.value)));
         meaning.addEventListener('input', () => action(view, () => edit(entry.id, 'meaning', meaning.value)));
         const footer = make(view.doc, 'div', undefined, 'hq-vocab-row');
         const source = entry.sources[0];
-        const sourceButton = make(view.doc, 'button', source?.title + (source?.page ? ' · p. ' + source.page : ''), 'hq-vocab-source');
-        sourceButton.title = 'Open source PDF';
+        const sourceButton = make(view.doc, 'button', source?.title + (source?.page ? t(" · p. ") + source.page : ''), 'hq-vocab-source');
+        sourceButton.title = t("Open source PDF");
         sourceButton.addEventListener('click', () => Zotero.Reader.open(source.itemID, Number.isInteger(source.pageIndex) ? { pageIndex: source.pageIndex } : undefined).catch(Zotero.logError));
-        const retry = make(view.doc, 'button', pending.has(entry.id) ? 'Translating…' : 'Translate'); retry.disabled = pending.has(entry.id);
-        retry.title = 'Translate Armenian to English using Translate for Zotero';
+        const retry = make(view.doc, 'button', pending.has(entry.id) ? t("Translating…") : t("Translate")); retry.disabled = pending.has(entry.id);
+        retry.title = t("Translate Armenian to English using Translate for Zotero");
         retry.addEventListener('click', () => translate(entry.id).catch(error => report(view, error.message)));
-        const remove = make(view.doc, 'button', 'Remove');
+        const remove = make(view.doc, 'button', t("Remove"));
         remove.addEventListener('click', () => action(view, () => {
           write(items => { items.find(e => e.id === entry.id).deleted = true; });
-          view.undoID = entry.id; view.undo.hidden = false; report(view, 'Removed from this list. Undo is available.');
+          view.undoID = entry.id; view.undo.hidden = false; report(view, t("Removed from this list. Undo is available."));
         }));
         footer.append(retry, remove);
         card.append(term, meaning, sourceButton, footer);
-        if (entry.translationError) card.append(make(view.doc, 'small', entry.translationError));
+        if (entry.translationError) card.append(make(view.doc, 'small', t('Translation unavailable — enter a meaning or retry.')));
         view.list.append(card);
       }
     } catch (error) { report(view, error.message); }
@@ -192,33 +193,51 @@ var Vocabulary = (() => {
     doc.defaultView.MozXULElement?.insertFTLIfNeeded(FTL);
     const root = make(doc, 'section', undefined, 'hq-vocab');
     const style = make(doc, 'link'); style.rel = 'stylesheet'; style.href = BASE + 'vocabulary.css';
+    const languageLabel = make(doc, 'label', t('Interface language') + ' ');
+    const language = make(doc, 'select'); language.setAttribute('aria-label', t('Interface language'));
+    for (const [value, text] of [['auto',t('Automatic')],['en','English'],['hy','Հայերեն']]) {
+      const option = make(doc, 'option', text); option.value = value; language.append(option);
+    }
+    language.value = Zotero.Prefs.get(VocabularyI18n.pref, true) || 'auto';
+    language.addEventListener('change', () => {
+      VocabularyI18n.setLanguage(language.value);
+      // Rebuild labels in every mounted sidebar, preserving filters and undo.
+      for (const old of [...views.values()]) {
+        const query = old.search.value, checked = old.current.checked, undoID = old.undoID;
+        views.delete(old.body); mount({body:old.body,item:{id:old.itemID}});
+        const fresh = views.get(old.body); fresh.search.value=query; fresh.current.checked=checked;
+        fresh.undoID=undoID; fresh.undo.hidden=!undoID; renderList(fresh);
+      }
+    });
+    languageLabel.append(language);
     const count = make(doc, 'p', '', 'hq-vocab-count');
-    const search = make(doc, 'input'); search.placeholder = 'Search vocabulary'; search.setAttribute('aria-label', 'Search vocabulary');
+    const search = make(doc, 'input'); search.placeholder = t("Search vocabulary"); search.setAttribute('aria-label', t("Search vocabulary"));
     const filter = make(doc, 'label', undefined, 'hq-vocab-filter');
-    const current = make(doc, 'input'); current.type = 'checkbox'; filter.append(current, make(doc, 'span', 'Current PDF only'));
+    const current = make(doc, 'input'); current.type = 'checkbox'; filter.append(current, make(doc, 'span', t("Current PDF only")));
     const buttons = make(doc, 'div', undefined, 'hq-vocab-row');
-    const copyButton = make(doc, 'button', 'Copy whole list');
-    const quizlet = make(doc, 'button', 'Copy & Open Quizlet', 'hq-vocab-primary');
+    const copyButton = make(doc, 'button', t("Copy whole list"));
+    const quizlet = make(doc, 'button', t("Copy & Open Quizlet"), 'hq-vocab-primary');
     buttons.append(copyButton, quizlet);
     const status = make(doc, 'p', '', 'hq-vocab-status'); status.setAttribute('role','status'); status.setAttribute('aria-live','polite');
-    const undo = make(doc, 'button', 'Undo remove'); undo.hidden = true;
+    const undo = make(doc, 'button', t("Undo remove")); undo.hidden = true;
     const list = make(doc, 'div', undefined, 'hq-vocab-list');
     const view = { body, doc, root, count, search, current, status, undo, list, itemID: item?.id };
     const exportAll = open => action(view, () => {
       const result = VocabularyCore.exportRows(read().entries.filter(e => !e.deleted).map(e => ({...e,selected:true})));
-      if (result.missing) { report(view, `Fill English meanings for ${result.missing} word(s) before exporting.`); return; }
-      if (!result.count) { report(view,'Your vocabulary list is empty.'); return; }
+      if (result.missing) { report(view, t('Fill English meanings for {count} word(s) before exporting.',{count:result.missing})); return; }
+      if (!result.count) { report(view,t("Your vocabulary list is empty.")); return; }
       copy(result.text);
       if (open) Zotero.launchURL('https://quizlet.com/create-set');
-      report(view, `${result.count} cards copied. In Quizlet choose Import, paste, then select Tab and New line.`);
+      report(view, t('{count} cards copied. In Quizlet choose Import, paste, then select Tab and New line.',{count:result.count}));
     });
     copyButton.addEventListener('click', () => exportAll(false));
     quizlet.addEventListener('click', () => exportAll(true));
     search.addEventListener('input', () => renderList(view)); current.addEventListener('change', () => renderList(view));
     list.addEventListener('focusout', () => doc.defaultView.setTimeout(() => { if (alive && view.deferred) renderList(view); }, 0));
-    undo.addEventListener('click', () => action(view, () => { write(entries => { const entry=entries.find(e=>e.id===view.undoID); if(entry) entry.deleted=false; }); undo.hidden=true; report(view,'Word restored.'); }));
-    root.append(style, count, search, filter, buttons, status, undo, list,
-      make(doc,'p','Words are saved locally. Check machine translations before studying. Quizlet import requires pasting the copied list.','hq-vocab-hint'));
+    undo.addEventListener('click', () => action(view, () => { write(entries => { const entry=entries.find(e=>e.id===view.undoID); if(entry) entry.deleted=false; }); undo.hidden=true; report(view,t("Word restored.")); }));
+    root.lang = VocabularyI18n.language();
+    root.append(style, languageLabel, count, search, filter, buttons, status, undo, list,
+      make(doc,'p',t("Words are saved locally. Check machine translations before studying. Quizlet import requires pasting the copied list."),'hq-vocab-hint'));
     body.replaceChildren(root); views.set(body, view); renderList(view);
   }
   function start() {
@@ -233,7 +252,7 @@ var Vocabulary = (() => {
       onRender: mount,
       onDestroy: ({body}) => views.delete(body)
     });
-    if (!paneID) throw new Error('Zotero could not register the Vocabulary sidebar.');
+    if (!paneID) throw new Error(t("Zotero could not register the Vocabulary sidebar."));
     Zotero.Reader.registerEventListener('renderTextSelectionPopup', selectionPopup, ID);
   }
   function stop() {
